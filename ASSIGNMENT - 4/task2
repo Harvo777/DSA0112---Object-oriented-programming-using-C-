@@ -1,0 +1,86 @@
+
+#include <iostream>
+#include <string>
+using namespace std;
+
+class Person {
+protected:
+    string name;
+    int id;
+
+public:
+    Person(string n, int i) : name(n), id(i) {
+        cout << "Person created\n";
+    }
+};
+
+class Student : virtual public Person {
+protected:
+    string programme;
+    double cgpa;
+
+public:
+    Student(string n, int i, string p, double c)
+        : Person(n, i), programme(p), cgpa(c) {
+        cout << "Student created\n";
+    }
+};
+
+class Staff : virtual public Person {
+protected:
+    string department;
+    double salary;
+
+public:
+    Staff(string n, int i, string d, double s)
+        : Person(n, i), department(d), salary(s) {
+        cout << "Staff created\n";
+    }
+};
+
+class TeachingAssistant : public Student, public Staff {
+public:
+    TeachingAssistant(string n, int i, string p, double c,
+                      string d, double s)
+        : Person(n, i),
+          Student(n, i, p, c),
+          Staff(n, i, d, s) {
+        cout << "Teaching Assistant created\n";
+    }
+
+    void display() {
+        cout << "\nName: " << name;
+        cout << "\nID: " << id;
+        cout << "\nProgramme: " << programme;
+        cout << "\nCGPA: " << cgpa;
+        cout << "\nDepartment: " << department;
+        cout << "\nSalary: " << salary << endl;
+    }
+};
+
+class ResearchScholar : public Student {
+    double fellowship;
+
+public:
+    ResearchScholar(string n, int i, string p,
+                    double c, double f)
+        : Person(n, i), Student(n, i, p, c),
+          fellowship(f) {}
+
+    void display() {
+        cout << "\nResearch Scholar: " << name;
+        cout << "\nFellowship: " << fellowship << endl;
+    }
+};
+
+int main() {
+    TeachingAssistant ta("Harsha", 101, "CSE", 8.5,
+                         "Computer Science", 30000);
+
+    ta.display();
+
+    ResearchScholar rs("Arun", 102, "CSE", 9.0, 15000);
+    rs.display();
+
+    return 0;
+}
