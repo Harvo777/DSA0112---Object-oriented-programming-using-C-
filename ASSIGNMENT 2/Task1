@@ -1,0 +1,56 @@
+#include <iostream>
+using namespace std;
+
+// Call by value: changes only the local copy.
+void applyByValue(long long fee, int percent) {
+    fee -= fee * percent / 100;
+}
+
+// Call by reference: changes the caller's variable.
+void applyByReference(long long& fee, int percent) {
+    fee -= fee * percent / 100;
+}
+
+// Call by pointer: changes the caller's variable through its address.
+void applyByPointer(long long* fee, int percent) {
+    if (fee != nullptr)
+        *fee -= (*fee) * percent / 100;
+}
+
+// Return by reference: returns the larger original variable.
+int& bigger(int& a, int& b) {
+    return (a > b) ? a : b;
+}
+
+// Default arguments.
+void show(int x, int y = 5, int z = 10) {
+    cout << x + y + z << ' ';
+}
+
+int main() {
+    long long fee1 = 45000, fee2 = 45000, fee3 = 45000;
+
+    applyByValue(fee1, 10);
+    applyByReference(fee2, 10);
+    applyByPointer(&fee3, 10);
+
+    cout << "After call by value     : " << fee1 << '\n';
+    cout << "After call by reference : " << fee2 << '\n';
+    cout << "After call by pointer   : " << fee3 << '\n';
+
+    int a = 1, b = 2, c = 3;
+    a += 10;
+    b += 10;
+    c += 10;
+    cout << "After change: " << a << ' ' << b << ' ' << c << '\n';
+
+    bigger(a, c) = 100;
+    cout << "After bigger(): " << a << ' ' << c << '\n';
+
+    cout << "Default arguments: ";
+    show(1);
+    show(1, 2);
+    show(1, 2, 3);
+    cout << '\n';
+    return 0;
+}
