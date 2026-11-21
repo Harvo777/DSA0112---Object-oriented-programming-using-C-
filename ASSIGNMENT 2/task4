@@ -1,0 +1,76 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+class SavingsAccount {
+private:
+    int accountNumber;
+    double balance;
+    double transactions[10];
+    int count;
+    int nextIndex; // Next position to write; also the oldest item when full.
+
+public:
+    SavingsAccount(int number, double openingBalance)
+        : accountNumber(number), balance(openingBalance), count(0), nextIndex(0) {}
+
+    void deposit(double amount);
+    void withdraw(double amount);
+    void miniStatement() const;
+};
+
+void SavingsAccount::deposit(double amount) {
+    if (amount <= 0) {
+        cout << "Invalid deposit amount\n";
+        return;
+    }
+    balance += amount;
+    transactions[nextIndex] = amount;
+    nextIndex = (nextIndex + 1) % 10;
+    if (count < 10) ++count;
+}
+
+void SavingsAccount::withdraw(double amount) {
+    if (amount <= 0 || amount > balance) {
+        cout << "Invalid withdrawal amount\n";
+        return;
+    }
+    balance -= amount;
+    transactions[nextIndex] = -amount; // Negative value represents withdrawal.
+    nextIndex = (nextIndex + 1) % 10;
+    if (count < 10) ++count;
+}
+
+void SavingsAccount::miniStatement() const {
+    cout << "Account number: " << accountNumber << '\n';
+    cout << "Balance: " << balance << '\n';
+    cout << "Last " << count << " transactions (oldest to newest):\n";
+
+    int start = (count == 10) ? nextIndex : 0;
+    for (int i = 0; i < count; ++i) {
+        int index = (start + i) % 10;
+        if (transactions[index] >= 0)
+            cout << "Deposit: " << transactions[index] << '\n';
+        else
+            cout << "Withdrawal: " << -transactions[index] << '\n';
+    }
+}
+
+int main() {
+    SavingsAccount account(1001, 5000);
+
+    account.deposit(1000);
+    account.withdraw(500);
+    account.deposit(750);
+    account.withdraw(200);
+    account.deposit(300);
+    account.withdraw(100);
+    account.deposit(400);
+    account.deposit(250);
+    account.withdraw(150);
+    account.deposit(600);
+    account.withdraw(50); // 11th transaction; oldest is overwritten.
+
+    account.miniStatement();
+    return 0;
+}
