@@ -1,0 +1,153 @@
+#include <iostream>
+#include <iomanip>
+#include <memory>
+#include <string>
+#include <vector>
+#include <stdexcept>
+using namespace std;
+
+// Common abstract interface
+class Bill {
+protected:
+    string patient;
+public:
+    explicit Bill(const string& p) : patient(p) {}
+    virtual ~Bill() = default;
+
+    virtual double total() const = 0;
+    virtual string type() const = 0;
+
+    const string& patientName() const { return patient; }
+
+    void print() const {
+        cout << type() << " " << patient << ": " << fixed
+             << setprecision(2) << total() << '\n';
+    }
+};
+
+class OutPatientBill : public Bill {
+    double consultation, tests;
+public:
+    OutPatientBill(const string& p, double c, double t) : Bill(p), consultation(c), tests(t) {
+        if (c < 0 || t < 0) throw invalid_argument("negative OP charge");
+    }
+    double total() const override { return consultation + tests; }
+    string type() const override { return "OP"; }
+};
+
+class InPatientBill : public Bill {
+    int days;
+    double perDay, procedures, medicines;
+public:
+    InPatientBill(const string& p, int d, double rate, double proc, double med)
+        : Bill(p), days(d), perDay(rate), procedures(proc), medicines(med) {
+        if (d < 0 || rate < 0 || proc < 0 || med < 0)
+            throw invalid_argument("negative IP charge or days");
+    }
+    double total() const override { return days * perDay + procedures + medicines; }
+    string type() const override { return "IP"; }
+};
+
+class DayCareBill : public Bill {
+    double packagePrice;
+public:
+    DayCareBill(const string& p, double price) : Bill(p), packagePrice(price) {
+        if (price < 0) throw invalid_argument("negative day-care charge");
+    }
+    double total() const override { return packagePrice; }
+    string type() const override { return "DAYCARE"; }
+};
+
+class EmergencyBill : public Bill {
+    double baseCharge, hourlyCharge;
+    int hours;
+public:
+    EmergencyBill(const string& p, double base, double hourly, int h)
+        : Bill(p), baseCharge(base), hourlyCharge(hourly), hours(h) {
+        if (base < 0 || hourly < 0 || h < 0)
+            throw invalid_argument("negative emergency charge or hours");
+    }
+    double total() const override { return baseCharge + hourlyCharge * hours; }
+    string type() const override { return "EMERGENCY"; }
+};
+
+// Abstract payer interface
+class Payer {
+public:
+    virtual ~Payer() = default;
+    virtual double amountCovered(const Bill& bill) const = 0;
+    virtual string name() const = 0;
+};
+
+class SelfPay : public Payer {
+public:
+    double amountCovered(const Bill&) const override { return 0.0; }
+    string name() const override { return "SelfPay"; }
+};
+
+class Insurance : public Payer {
+    double coverLimit;
+    double coPayPercent; // patient's co-payment percentage
+public:
+    Insurance(double limit, double copay) : coverLimit(limit), coPayPercent(copay) {
+        if (limit < 0 || copay < 0 || copay > 100)
+            throw invalid_argument("invalid insurance policy");
+    }
+    double amountCovered(const Bill& bill) const override {
+        double eligible = min(bill.total(), coverLimit);
+        return eligible * (100.0 - coPayPercent) / 100.0;
+    }
+    string name() const override { return "Insurance"; }
+};
+
+class GovernmentScheme : public Payer {
+    double packageRate;
+public:
+    explicit GovernmentScheme(double rate) : packageRate(rate) {
+        if (rate < 0) throw invalid_argument("invalid government package rate");
+    }
+    double amountCovered(const Bill& bill) const override {
+        return min(bill.total(), packageRate);
+    }
+    string name() const override { return "GovernmentScheme"; }
+};
+
+int main() {
+    try {
+        vector<unique_ptr<Bill>> bills;
+        bills.push_back(make_unique<OutPatientBill>("Ravi", 500, 1200));
+        bills.push_back(make_unique<InPatientBill>("Meena", 3, 2500, 40000, 0));
+        bills.push_back(make_unique<DayCareBill>("Arun", 18000));
+        bills.push_back(make_unique<EmergencyBill>("Divya", 3000, 1000, 4));
+
+        cout << "BILL DETAILS\n";
+        double grandTotal = 0;
+        for (const auto& bill : bills) {
+            bill->print();
+            grandTotal += bill->total();
+        }
+        cout << "Total " << fixed << setprecision(2) << grandTotal << "\n\n";
+
+        SelfPay self;
+        Insurance insurance(50000, 20);
+        GovernmentScheme govt(15000);
+        vector<const Payer*> payers = {&self, &insurance, &govt};
+
+        cout << "PAYER TESTS\n";
+        for (const auto& bill : bills) {
+            cout << bill->type() << " " << bill->patientName()
+                 << " bill = " << bill->total() << '\n';
+            for (const Payer* payer : payers) {
+                double covered = payer->amountCovered(*bill);
+                double patientPays = bill->total() - covered;
+                cout << "  " << payer->name()
+                     << " covered = " << covered
+                     << ", patient pays = " << patientPays << '\n';
+            }
+        }
+    } catch (const exception& e) {
+        cerr << "Billing error: " << e.what() << '\n';
+        return 1;
+    }
+    return 0;
+}
