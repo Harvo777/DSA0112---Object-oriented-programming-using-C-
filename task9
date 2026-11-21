@@ -1,0 +1,45 @@
+#include <iostream>
+#include <vector>
+using namespace std;
+
+enum class Zone { Inner, Middle, Outer };
+
+long long calculateFare(Zone zone, int hour) {
+    long long base = 0;
+    switch (zone) {
+        case Zone::Inner: base = 1000; break;
+        case Zone::Middle: base = 2000; break;
+        case Zone::Outer: base = 3000; break;
+    }
+    bool peak = (hour >= 8 && hour < 10) || (hour >= 17 && hour < 20);
+    return peak ? base + base * 20 / 100 : base;
+}
+
+struct TestCase {
+    Zone zone;
+    int hour;
+    long long expected;
+    const char* label;
+};
+
+int main() {
+    vector<TestCase> tests = {
+        {Zone::Inner, 7, 1000, "Inner off-peak"},
+        {Zone::Middle, 8, 2400, "Middle at 8 AM"},
+        {Zone::Outer, 9, 3600, "Outer peak"},
+        {Zone::Outer, 10, 3000, "Outer at 10 AM"},
+        {Zone::Middle, 17, 2400, "Middle at 5 PM"},
+        {Zone::Inner, 20, 1000, "Inner at 8 PM"}
+    };
+
+    int passed = 0;
+    for (const auto& t : tests) {
+        long long actual = calculateFare(t.zone, t.hour);
+        bool ok = actual == t.expected;
+        passed += ok;
+        cout << t.label << ": expected " << t.expected
+             << ", actual " << actual << " -> "
+             << (ok ? "PASS" : "FAIL") << '\n';
+    }
+    cout << "Passed " << passed << " of " << tests.size() << " tests\n";
+}
