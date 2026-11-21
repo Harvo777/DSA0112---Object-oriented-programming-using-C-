@@ -1,0 +1,20 @@
+#include <climits>
+#include <iostream>
+using namespace std;
+
+int main() {
+    const long long farePaise = 3600;
+    const long long journeyCounts[] = {20000, 500000, 3000000};
+
+    for (long long n : journeyCounts) {
+        long long total = farePaise * n;
+        cout << n << " journeys: " << total << " paise (Rs "
+             << total / 100 << ")\n";
+        cout << "Fits in int? "
+             << boolalpha
+             << (total <= INT_MAX && total >= INT_MIN) << '\n';
+    }
+
+    // Do not actually overflow a signed int: signed overflow is undefined behaviour.
+    cout << "INT_MAX = " << INT_MAX << '\n';
+}
