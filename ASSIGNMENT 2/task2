@@ -1,0 +1,49 @@
+#include <iostream>
+using namespace std;
+
+// Returns a reference to the highest element in the array.
+int& highestMark(int marks[], int size) {
+    int highestIndex = 0;
+    for (int i = 1; i < size; ++i) {
+        if (marks[i] > marks[highestIndex])
+            highestIndex = i;
+    }
+    return marks[highestIndex];
+}
+
+// DANGEROUS EXAMPLE: returning a reference to a local variable.
+// A compiler normally warns about this. Never use the returned reference.
+// int& dangerousFunction() {
+//     int local = 50;
+//     return local; // Dangling reference: undefined behaviour if used.
+// }
+
+int highestMarkIndex(const int marks[], int size) {
+    int highestIndex = 0;
+    for (int i = 1; i < size; ++i) {
+        if (marks[i] > marks[highestIndex])
+            highestIndex = i;
+    }
+    return highestIndex;
+}
+
+int main() {
+    int marks[] = {78, 92, 85, 88, 96};
+    const int size = sizeof(marks) / sizeof(marks[0]);
+
+    cout << "Highest mark: " << highestMark(marks, size) << '\n';
+
+    highestMark(marks, size) += 2;
+    cout << "After moderation: " << highestMark(marks, size) << '\n';
+
+    int index = highestMarkIndex(marks, size);
+    cout << "Highest mark index: " << index << '\n';
+
+    const int& readOnlyHighest = highestMark(marks, size);
+    cout << "Const reference: " << readOnlyHighest << '\n';
+
+    int copiedHighest = highestMark(marks, size);
+    copiedHighest = 0;
+    cout << "Original remains: " << highestMark(marks, size) << '\n';
+    return 0;
+}
