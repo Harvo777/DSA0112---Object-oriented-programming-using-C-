@@ -1,0 +1,36 @@
+#include <iostream>
+using namespace std;
+
+enum class Zone { Inner, Middle, Outer };
+constexpr long long FARES[] = {1000, 2000, 3000};
+constexpr long long MINIMUM_BALANCE = 5000;
+constexpr int PEAK_PERCENT = 20;
+
+long long calculateFare(Zone zone, int hour) {
+    int index = static_cast<int>(zone);
+    long long amount = FARES[index];
+    bool peak = (hour >= 8 && hour < 10) || (hour >= 17 && hour < 20);
+    if (peak) amount += amount * PEAK_PERCENT / 100;
+    return amount;
+}
+
+class SmartCard {
+    long long balancePaise;
+public:
+    explicit SmartCard(long long balance) : balancePaise(balance) {}
+    bool pay(long long farePaise) {
+        if (farePaise < 0 || balancePaise - farePaise < MINIMUM_BALANCE)
+            return false;
+        balancePaise -= farePaise;
+        return true;
+    }
+    long long balance() const { return balancePaise; }
+};
+
+int main() {
+    SmartCard card(10000);
+    long long fare = calculateFare(Zone::Outer, 18);
+    cout << "Calculated fare (paise): " << fare << '\n';
+    cout << "Journey accepted: " << boolalpha << card.pay(fare) << '\n';
+    cout << "Balance (paise): " << card.balance() << '\n';
+}
