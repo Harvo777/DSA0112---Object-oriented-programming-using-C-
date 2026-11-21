@@ -1,0 +1,55 @@
+#include <iostream>
+#include <string>
+using namespace std;
+
+class Passenger {
+public:
+    string name;
+    bool student;
+    bool senior;
+};
+
+class SmartCard {
+private:
+    long long balancePaise;
+public:
+    explicit SmartCard(long long balance) : balancePaise(balance) {}
+    long long balance() const { return balancePaise; }
+    bool canTravel(long long farePaise) const {
+        return farePaise >= 0 && balancePaise - farePaise >= 5000;
+    }
+    bool deduct(long long farePaise) {
+        if (!canTravel(farePaise)) return false;
+        balancePaise -= farePaise;
+        return true;
+    }
+};
+
+enum class Zone { Inner, Middle, Outer };
+
+class FareTable {
+public:
+    static constexpr long long INNER = 1000;
+    static constexpr long long MIDDLE = 2000;
+    static constexpr long long OUTER = 3000;
+
+    static long long baseFare(Zone zone) {
+        switch (zone) {
+            case Zone::Inner: return INNER;
+            case Zone::Middle: return MIDDLE;
+            case Zone::Outer: return OUTER;
+        }
+        return 0;
+    }
+};
+
+int main() {
+    Passenger p{"Student Passenger", true, false};
+    SmartCard card(10000);
+    long long fare = FareTable::baseFare(Zone::Outer);
+    if (p.student) fare = fare * 90 / 100; // Assumption: 10% student concession.
+    cout << "Passenger: " << p.name << '\n';
+    cout << "Fare (paise): " << fare << '\n';
+    cout << (card.deduct(fare) ? "Journey accepted\n" : "Journey denied\n");
+    cout << "Remaining balance (paise): " << card.balance() << '\n';
+}
