@@ -1,0 +1,75 @@
+#include <iostream>
+#include <string>
+
+class Event {
+    int rows;
+    int seatsPerRow;
+    bool** seats;
+    std::string name;
+    int booked;
+
+public:
+    Event(const std::string& eventName, int r, int s)
+        : rows(r > 0 ? r : 0), seatsPerRow(s > 0 ? s : 0),
+          seats(nullptr), name(eventName), booked(0) {
+        if (rows > 0 && seatsPerRow > 0) {
+            seats = new bool*[rows];
+            for (int i = 0; i < rows; ++i) {
+                seats[i] = new bool[seatsPerRow]{};
+            }
+        }
+        std::cout << "Created event: " << name << '\n';
+    }
+
+    bool book(int row, int seat) {
+        if (row < 0 || row >= rows || seat < 0 || seat >= seatsPerRow)
+            return false;
+        if (seats[row][seat]) return false;
+        seats[row][seat] = true;
+        ++booked;
+        return true;
+    }
+
+    bool cancel(int row, int seat) {
+        if (row < 0 || row >= rows || seat < 0 || seat >= seatsPerRow)
+            return false;
+        if (!seats[row][seat]) return false;
+        seats[row][seat] = false;
+        --booked;
+        return true;
+    }
+
+    void display() const {
+        std::cout << name << ": " << booked << " seat(s) booked\n";
+    }
+
+    ~Event() {
+        for (int i = 0; i < rows; ++i) delete[] seats[i];
+        delete[] seats;
+        std::cout << "Closed event: " << name
+                  << ", final bookings: " << booked << '\n';
+    }
+};
+
+int main() {
+    Event stackEvent("Stack Event", 2, 3);
+    stackEvent.book(0, 1);
+    stackEvent.book(1, 2);
+    stackEvent.cancel(0, 1);
+    stackEvent.display();
+
+    Event* heapEvent = new Event("Heap Event", 3, 4);
+    heapEvent->book(2, 1);
+    heapEvent->display();
+    delete heapEvent;
+
+    {
+        Event blockEvent("Block Event", 1, 2);
+        blockEvent.book(0, 0);
+        blockEvent.display();
+    }
+
+    Event zeroEvent("Zero Row Event", 0, 5);
+    zeroEvent.display();
+    return 0;
+}
