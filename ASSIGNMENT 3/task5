@@ -1,0 +1,85 @@
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+class Time {
+    int seconds;
+
+public:
+    explicit Time(int total = 0) : seconds(total < 0 ? 0 : total) {}
+
+    Time& operator++() { // prefix
+        ++seconds;
+        return *this;
+    }
+
+    Time operator++(int) { // postfix
+        Time old = *this;
+        ++seconds;
+        return old;
+    }
+
+    bool operator==(const Time& other) const {
+        return seconds == other.seconds;
+    }
+
+    bool operator<(const Time& other) const {
+        return seconds < other.seconds;
+    }
+
+    void display() const {
+        int h = seconds / 3600;
+        int m = (seconds % 3600) / 60;
+        int s = seconds % 60;
+        std::cout << h << ':';
+        if (m < 10) std::cout << '0';
+        std::cout << m << ':';
+        if (s < 10) std::cout << '0';
+        std::cout << s;
+    }
+};
+
+class Playlist {
+    std::vector<std::string> tracks;
+
+public:
+    Playlist(std::initializer_list<std::string> list) : tracks(list) {}
+
+    std::string& operator[](int index) {
+        if (index < 0 || index >= static_cast<int>(tracks.size()))
+            throw std::out_of_range("Playlist index out of range");
+        return tracks[index];
+    }
+
+    const std::string& operator[](int index) const {
+        if (index < 0 || index >= static_cast<int>(tracks.size()))
+            throw std::out_of_range("Playlist index out of range");
+        return tracks[index];
+    }
+
+    int size() const { return static_cast<int>(tracks.size()); }
+};
+
+int main() {
+    Time t(3599);
+    Time a = t++;
+    Time b = ++t;
+
+    std::cout << "a = "; a.display();
+    std::cout << "\nb = "; b.display();
+    std::cout << "\nt = "; t.display();
+    std::cout << '\n';
+
+    Playlist playlist{"Track One", "Track Two", "Track Three"};
+    std::cout << "Playing: " << playlist[0] << '\n';
+    playlist[1] = "Updated Track";
+    std::cout << "Updated: " << playlist[1] << '\n';
+
+    try {
+        std::cout << playlist[playlist.size()] << '\n';
+    } catch (const std::out_of_range& e) {
+        std::cout << "Error: " << e.what() << '\n';
+    }
+    return 0;
+}
