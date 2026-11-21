@@ -1,0 +1,40 @@
+#include <iostream>
+using namespace std;
+
+// Procedural version
+bool proceduralCanTravel(long long balance, long long fare) {
+    return fare >= 0 && balance - fare >= 5000;
+}
+bool proceduralDeduct(long long& balance, long long fare) {
+    if (!proceduralCanTravel(balance, fare)) return false;
+    balance -= fare;
+    return true;
+}
+
+// Object-oriented version
+class SmartCard {
+private:
+    long long balancePaise;
+public:
+    explicit SmartCard(long long initialBalance) : balancePaise(initialBalance) {}
+    bool canTravel(long long fare) const {
+        return fare >= 0 && balancePaise - fare >= 5000;
+    }
+    bool deduct(long long fare) {
+        if (!canTravel(fare)) return false;
+        balancePaise -= fare;
+        return true;
+    }
+    long long balance() const { return balancePaise; }
+};
+
+int main() {
+    long long proceduralBalance = 10000;
+    cout << "Procedural accepted: "
+         << boolalpha << proceduralDeduct(proceduralBalance, 3000) << '\n';
+    cout << "Procedural balance: " << proceduralBalance << '\n';
+
+    SmartCard card(10000);
+    cout << "OOP accepted: " << card.deduct(3000) << '\n';
+    cout << "OOP balance: " << card.balance() << '\n';
+}
