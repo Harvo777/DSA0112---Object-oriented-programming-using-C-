@@ -1,0 +1,154 @@
+
+#include <iostream>
+#include <string>
+using namespace std;
+
+class Address {
+    string city;
+    int pin;
+
+public:
+    Address(string c, int p) : city(c), pin(p) {
+        cout << "Address constructed\n";
+    }
+
+    ~Address() {
+        cout << "Address destroyed\n";
+    }
+
+    void display() const {
+        cout << city << "-" << pin << endl;
+    }
+};
+
+class Course {
+    string courseName;
+
+public:
+    Course(string c) : courseName(c) {
+        cout << "Course constructed\n";
+    }
+
+    ~Course() {
+        cout << "Course destroyed\n";
+    }
+
+    void display() const {
+        cout << courseName << endl;
+    }
+};
+
+class Person {
+protected:
+    string name;
+    int age;
+    Address home;
+
+public:
+    Person(string n, int a, string city, int pin)
+        : name(n), age(a), home(city, pin) {
+        cout << "Person constructed\n";
+    }
+
+    virtual ~Person() {
+        cout << "Person destroyed\n";
+    }
+};
+
+class Student : public Person {
+    long long regNo;
+    Course course;
+
+public:
+    Student(string n, int a, long long r,
+            string city, int pin, string c)
+        : Person(n, a, city, pin),
+          regNo(r), course(c) {
+        cout << "Student constructed\n";
+    }
+
+    ~Student() {
+        cout << "Student destroyed\n";
+    }
+
+    void display() const {
+        cout << "\nRegister Number: " << regNo;
+        cout << "\nName: " << name;
+        cout << "\nAge: " << age;
+        cout << "\nAddress: ";
+        home.display();
+        cout << "Course: ";
+        course.display();
+    }
+};
+
+class Staff : public Person {
+    double salary;
+
+public:
+    Staff(string n, int a, string city, int pin, double s)
+        : Person(n, a, city, pin), salary(s) {
+        cout << "Staff constructed\n";
+    }
+
+    ~Staff() {
+        cout << "Staff destroyed\n";
+    }
+};
+
+class TeachingAssistant : public Student {
+    string department;
+
+public:
+    TeachingAssistant(string n, int a, long long r,
+                      string city, int pin, string c, string d)
+        : Student(n, a, r, city, pin, c),
+          department(d) {
+        cout << "Teaching Assistant constructed\n";
+    }
+
+    ~TeachingAssistant() {
+        cout << "Teaching Assistant destroyed\n";
+    }
+};
+
+class Engine {
+public:
+    Engine() { cout << "Engine "; }
+    ~Engine() { cout << "~Engine "; }
+};
+
+class Vehicle {
+public:
+    Vehicle() { cout << "Vehicle "; }
+    ~Vehicle() { cout << "~Vehicle "; }
+};
+
+class Car : public Vehicle {
+    Engine e;
+
+public:
+    Car() { cout << "Car "; }
+    ~Car() { cout << "~Car "; }
+};
+
+int main() {
+    cout << "STUDENT DETAILS\n";
+
+    {
+        Student s("Kavya", 19, 192311001,
+                  "Salem", 636001, "CSE");
+        s.display();
+    }
+
+    cout << "\nCONSTRUCTION ORDER\n";
+
+    {
+        Car c;
+        cout << "| ";
+    }
+
+    cout << "\n";
+
+    return 0;
+}
