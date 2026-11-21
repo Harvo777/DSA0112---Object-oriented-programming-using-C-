@@ -1,0 +1,81 @@
+#include <iostream>
+#include <chrono>
+#include <vector>
+using namespace std;
+using namespace std::chrono;
+
+// Original design: shift every stored item when the array is full.
+class ShiftingHistory {
+    static const int K = 10;
+    int data[K]{};
+    int count = 0;
+
+public:
+    void add(int value) {
+        if (count < K) {
+            data[count++] = value;
+        } else {
+            for (int i = 1; i < K; ++i)
+                data[i - 1] = data[i];
+            data[K - 1] = value;
+        }
+    }
+
+    long long checksum() const {
+        long long sum = 0;
+        for (int i = 0; i < count; ++i) sum += data[i];
+        return sum;
+    }
+};
+
+// Redesigned version: circular buffer overwrites the oldest item in O(1).
+class CircularHistory {
+    static const int K = 10;
+    int data[K]{};
+    int count = 0;
+    int next = 0;
+
+public:
+    void add(int value) {
+        data[next] = value;
+        next = (next + 1) % K;
+        if (count < K) ++count;
+    }
+
+    long long checksum() const {
+        long long sum = 0;
+        for (int i = 0; i < count; ++i)
+            sum += data[i];
+        return sum;
+    }
+};
+
+int main() {
+    const int operations = 5000000;
+    volatile long long result = 0;
+
+    ShiftingHistory original;
+    auto start1 = steady_clock::now();
+    for (int i = 0; i < operations; ++i)
+        original.add(i);
+    result = original.checksum();
+    auto end1 = steady_clock::now();
+
+    CircularHistory redesigned;
+    auto start2 = steady_clock::now();
+    for (int i = 0; i < operations; ++i)
+        redesigned.add(i);
+    result = result + redesigned.checksum();
+    auto end2 = steady_clock::now();
+
+    auto oldTime = duration_cast<microseconds>(end1 - start1).count();
+    auto newTime = duration_cast<microseconds>(end2 - start2).count();
+
+    cout << "Operations: " << operations << '\n';
+    cout << "Original shifting design: " << oldTime << " microseconds\n";
+    cout << "Circular buffer design:   " << newTime << " microseconds\n";
+    cout << "Checksum (prevents unused-result optimisation): " << result << '\n';
+    cout << "Original add: O(K) when full; redesigned add: O(1)\n";
+    cout << "Both designs use O(K) memory.\n";
+    return 0;
+}
