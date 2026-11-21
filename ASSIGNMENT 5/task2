@@ -1,0 +1,129 @@
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+#include <memory>
+using namespace std;
+
+class BillingError : public runtime_error {
+public:
+    using runtime_error::runtime_error;
+};
+
+class ClaimError : public BillingError {
+public:
+    using BillingError::BillingError;
+};
+
+class UnknownPackageError : public BillingError {
+public:
+    using BillingError::BillingError;
+};
+
+double approve(double billed, double cover) {
+    if (billed < 0 || cover < 0)
+        throw invalid_argument("negative amount");
+    if (billed > cover)
+        throw ClaimError("exceeds cover");
+    return billed;
+}
+
+double settle(double billed, double cover) {
+    try {
+        return approve(billed, cover);
+    } catch (const ClaimError& e) {
+        cout << "audit: " << e.what() << '\n';
+        throw; // rethrows the same exception and preserves its type
+    }
+}
+
+double packageRate(const string& code) {
+    if (code == "GOV100") return 10000;
+    if (code == "GOV200") return 20000;
+    throw UnknownPackageError("unknown package: " + code);
+}
+
+void validateTextAmount(const string& text) {
+    // stod throws invalid_argument if text does not begin with a number.
+    size_t used = 0;
+    double value = stod(text, &used);
+    if (used != text.size()) throw invalid_argument("invalid numeric text");
+    if (value < 0) throw invalid_argument("negative amount");
+    cout << "parsed amount: " << value << '\n';
+}
+
+struct Resource {
+    string name;
+    explicit Resource(string n) : name(std::move(n)) {
+        cout << "created " << name << '\n';
+    }
+    ~Resource() { cout << "destroyed " << name << '\n'; }
+};
+
+void allocationTest() {
+    try {
+        // A deliberately unreasonable allocation. The standard library may throw
+        // bad_alloc or length_error depending on implementation and requested size.
+        vector<int> huge;
+        huge.resize(huge.max_size());
+        cout << "large allocation succeeded\n";
+    } catch (const bad_alloc& e) {
+        cout << "caught bad_alloc: " << e.what() << '\n';
+    } catch (const length_error& e) {
+        cout << "caught length_error: " << e.what() << '\n';
+    }
+}
+
+int main() {
+    cout << "PREDICT-OUTPUT PROGRAM\n";
+    for (double amount : {100.0, -5.0, 2e6}) {
+        try {
+            if (amount < 0) throw invalid_argument("negative");
+            if (amount > 1e6) throw out_of_range("too large");
+            cout << "ok ";
+        } catch (const out_of_range& e) {
+            cout << "[log " << e.what() << "] ";
+            cout << "caught " << e.what() << ' ';
+        } catch (const exception& e) {
+            cout << "caught " << e.what() << ' ';
+        }
+    }
+    cout << "\n\nCOMPLETE-CODE CLAIM TEST\n";
+
+    double cases[][2] = {{40000, 50000}, {60000, 50000}, {-1, 50000}};
+    for (auto& c : cases) {
+        try {
+            double paid = settle(c[0], c[1]);
+            cout << "approved " << paid << '\n';
+        } catch (const ClaimError& e) {
+            cout << "claim rejected: " << e.what() << '\n';
+        } catch (const exception& e) {
+            cout << "error: " << e.what() << '\n';
+        }
+    }
+
+    cout << "\nOTHER ERROR TESTS\n";
+    try {
+        cout << "package rate: " << packageRate("BADCODE") << '\n';
+    } catch (const UnknownPackageError& e) {
+        cout << "package error: " << e.what() << '\n';
+    }
+
+    try {
+        validateTextAmount("hello");
+    } catch (const invalid_argument& e) {
+        cout << "text error: " << e.what() << '\n';
+    }
+
+    cout << "\nRAII / STACK UNWINDING TEST\n";
+    try {
+        auto resource = make_unique<Resource>("patient-record");
+        throw runtime_error("simulated processing failure");
+    } catch (...) {
+        cout << "top-level handler: processing failed safely\n";
+    }
+
+    cout << "\nALLOCATION TEST\n";
+    allocationTest();
+    return 0;
+}
