@@ -1,0 +1,167 @@
+
+#include <iostream>
+#include <vector>
+#include <memory>
+#include <string>
+using namespace std;
+
+class Vehicle {
+protected:
+    string regNo;
+    double dailyRate;
+    bool rented = false;
+
+public:
+    Vehicle(string r, double rate)
+        : regNo(r), dailyRate(rate) {}
+
+    virtual double charge(int days) const = 0;
+
+    virtual void display() const {
+        cout << "Registration: " << regNo
+             << " | Daily Rate: " << dailyRate;
+    }
+
+    void rent() {
+        rented = true;
+        cout << regNo << " rented successfully\n";
+    }
+
+    void returnVehicle(int daysLate) {
+        rented = false;
+        cout << regNo << " returned.\n";
+        cout << "Late Charge: " << daysLate * 200 << endl;
+    }
+
+    virtual ~Vehicle() {}
+};
+
+class Bicycle : public Vehicle {
+public:
+    Bicycle(string r, double rate)
+        : Vehicle(r, rate) {}
+
+    double charge(int days) const override {
+        return dailyRate * days;
+    }
+};
+
+class MotorVehicle : public Vehicle {
+protected:
+    double fuelLevel;
+    string serviceDate;
+
+public:
+    MotorVehicle(string r, double rate,
+                 double fuel, string date)
+        : Vehicle(r, rate),
+          fuelLevel(fuel), serviceDate(date) {}
+};
+
+class TwoWheeler : public MotorVehicle {
+public:
+    TwoWheeler(string r, double rate,
+               double fuel, string date)
+        : MotorVehicle(r, rate, fuel, date) {}
+
+    double charge(int days) const override {
+        return dailyRate * days;
+    }
+};
+
+class Car : public MotorVehicle {
+protected:
+    int seats;
+
+public:
+    Car(string r, double rate, double fuel,
+        string date, int s)
+        : MotorVehicle(r, rate, fuel, date),
+          seats(s) {}
+
+    double charge(int days) const override {
+        return dailyRate * days;
+    }
+
+    void display() const override {
+        Vehicle::display();
+        cout << " | Seats: " << seats << endl;
+    }
+};
+
+class ElectricCar : public Car {
+    double batteryCapacity;
+    double electricityRate;
+
+public:
+    ElectricCar(string r, double rate, double fuel,
+                string date, int seats,
+                double battery, double kwhRate)
+        : Car(r, rate, fuel, date, seats),
+          batteryCapacity(battery),
+          electricityRate(kwhRate) {}
+
+    double charge(int days) const override {
+        return dailyRate * days +
+               batteryCapacity * electricityRate;
+    }
+};
+
+class ElectricBus : public Vehicle {
+    int seats;
+    double batteryCapacity;
+    double electricityRate;
+
+public:
+    ElectricBus(string r, double rate, int s,
+                double battery, double kwhRate)
+        : Vehicle(r, rate), seats(s),
+          batteryCapacity(battery),
+          electricityRate(kwhRate) {}
+
+    double charge(int days) const override {
+        return dailyRate * days +
+               batteryCapacity * electricityRate;
+    }
+
+    void display() const override {
+        Vehicle::display();
+        cout << " | Bus Seats: " << seats << endl;
+    }
+};
+
+int main() {
+    vector<unique_ptr<Vehicle>> fleet;
+
+    fleet.push_back(make_unique<Bicycle>(
+        "BIKE101", 100));
+
+    fleet.push_back(make_unique<TwoWheeler>(
+        "BIKE202", 300, 80, "2026-12-01"));
+
+    fleet.push_back(make_unique<Car>(
+        "CAR303", 1500, 50, "2026-12-10", 5));
+
+    fleet.push_back(make_unique<ElectricCar>(
+        "EV404", 2000, 0, "2026-12-15",
+        5, 60, 8));
+
+    // Adding a new vehicle type
+    fleet.push_back(make_unique<ElectricBus>(
+        "BUS505", 5000, 40, 200, 8));
+
+    cout << "VEHICLE RENTAL SYSTEM\n\n";
+
+    for (auto& v : fleet) {
+        v->display();
+        cout << "\nRental Charge for 3 days: "
+             << v->charge(3) << endl;
+
+        v->rent();
+        v->returnVehicle(2);
+
+        cout << "-----------------------\n";
+    }
+
+    return 0;
+}
